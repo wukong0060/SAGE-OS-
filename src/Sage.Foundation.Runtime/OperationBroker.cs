@@ -161,6 +161,11 @@ public sealed class OperationBroker
                 string.Join("; ", decision.Reasons));
         }
 
+        // Consume exactly once immediately before durable preparation. The
+        // repository implementation must make this operation atomic.
+        if (!await _previews.ConsumeAsync(preview.Reference, cancellationToken))
+            return Result(request, "rejected", "PREVIEW_ALREADY_CONSUMED");
+
         // Durable preparation must finish before the handler can mutate state.
         await _journal.PrepareAsync(request, preview, cancellationToken);
 
