@@ -4,7 +4,7 @@ $ErrorActionPreference='Stop'
 function Assert-Equal {param([object]$Actual,[object]$Expected,[string]$Name) if($Actual -ne $Expected){throw ("FAIL: {0}; expected [{1}], got [{2}]" -f $Name,$Expected,$Actual)}}
 function New-Facts {
  param([string]$ProductName,[string]$DisplayVersion,[string]$Build,[string]$Architecture='x64',[int]$ProductType=1)
- [pscustomobject]@{ProductName=$ProductName;DisplayVersion=$DisplayVersion;CurrentBuildNumber=$Build;UBR=0;EditionID='Professional';InstallationType='Client';Architecture=$Architecture;ProductType=$ProductType;PowerShellVersion='5.1.0';PowerShellEdition='Desktop';PowerShell7Available=$false;DotNet10DesktopRuntimePresent=$false}
+ [pscustomobject]@{ProductName=$ProductName;DisplayVersion=$DisplayVersion;CurrentBuildNumber=$Build;UBR=0;EditionID='Professional';InstallationType='Client';Architecture=$Architecture;ProductType=$ProductType;PowerShellVersion='5.1.0';PowerShellEdition='Desktop';PowerShell7Available=$false;DotNet10RuntimePresent=$false}
 }
 $a=Get-SAGECompatibilityReport (New-Facts 'Windows 10 Pro' '22H2' '19045')
 Assert-Equal $a.CompatibilityTier 'LegacyCompatibility' 'Win10 22H2 x64'
