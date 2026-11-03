@@ -90,8 +90,9 @@ function Get-SAGESecurityPosture {
     if ($null -eq $Facts) { $Facts = Get-SAGESecurityFacts }
 
     $vbsState = 'Unknown'
-    if ($null -ne $Facts.VBSStatus) {
-        switch ([int]$Facts.VBSStatus) {
+    $vbsNumeric = 0
+    if ([int]::TryParse([string]$Facts.VBSStatus, [ref]$vbsNumeric)) {
+        switch ($vbsNumeric) {
             0 { $vbsState='Disabled' }
             1 { $vbsState='EnabledNotRunning' }
             2 { $vbsState='EnabledAndRunning' }
