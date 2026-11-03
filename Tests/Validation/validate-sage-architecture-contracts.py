@@ -42,7 +42,7 @@ def main() -> int:
         loaded[filename] = schema
         if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
             failures.append(f"wrong JSON Schema dialect: {filename}")
-        if not schema.get("$id", "").startswith("https://sageos.dev/schemas/architecture/"):
+        if not schema.get("$id", "").startswith("urn:sageos:schema:architecture:"):
             failures.append(f"missing stable schema ID: {filename}")
         required = set(schema.get("required", []))
         if not expected_required.issubset(required):
