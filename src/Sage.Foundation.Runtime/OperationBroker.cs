@@ -143,8 +143,12 @@ public sealed class OperationBroker
 
         if (approval is not null)
         {
-            if (!string.Equals(approval.PreviewHash, preview.PreviewHash, StringComparison.Ordinal) ||
+            if (approval.OperationId != request.OperationId ||
+                !string.Equals(approval.FeatureId, request.FeatureId, StringComparison.Ordinal) ||
+                approval.Target != request.Target ||
+                !string.Equals(approval.PreviewHash, preview.PreviewHash, StringComparison.Ordinal) ||
                 approval.ExpiresAt <= _clock.UtcNow ||
+                !approval.ApprovedScopes.Contains(request.Target.Scope, StringComparer.Ordinal) ||
                 !await _approvalVerifier.VerifyAsync(approval, request, preview, cancellationToken))
             {
                 return Result(request, "denied", "APPROVAL_INVALID");
