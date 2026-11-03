@@ -1,0 +1,16 @@
+name: SAGE Compatibility Engine 2.0
+on:
+  push:
+    branches: [ main, feature/compatibility-engine-2.0 ]
+    paths: [ 'Compatibility/**', 'Tests/CompatibilityEngine.Tests.ps1', '.github/workflows/compatibility-engine.yml' ]
+  pull_request:
+    paths: [ 'Compatibility/**', 'Tests/CompatibilityEngine.Tests.ps1', '.github/workflows/compatibility-engine.yml' ]
+  workflow_dispatch:
+jobs:
+  windows-powershell:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run compatibility engine tests under Windows PowerShell
+        shell: powershell
+        run: .\Tests\CompatibilityEngine.Tests.ps1
