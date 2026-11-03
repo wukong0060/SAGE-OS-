@@ -137,6 +137,49 @@
         "expiresAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "operationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "featureId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9.-]{2,127}$"
+        },
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scope",
+            "resource"
+          ],
+          "properties": {
+            "scope": {
+              "enum": [
+                "user",
+                "machine",
+                "process",
+                "game",
+                "application",
+                "device",
+                "network",
+                "sage_state"
+              ]
+            },
+            "resource": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            "resourceId": {
+              "type": "string",
+              "maxLength": 256
+            }
+          }
+        },
+        "previewHash": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
         }
       }
     },
@@ -194,6 +237,41 @@
                 "const": false
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "approval": {
+            "properties": {
+              "granted": {
+                "const": true
+              }
+            },
+            "required": [
+              "granted"
+            ]
+          }
+        },
+        "required": [
+          "approval"
+        ]
+      },
+      "then": {
+        "properties": {
+          "approval": {
+            "required": [
+              "actorId",
+              "grantedAt",
+              "approvedScopes",
+              "expiresAt",
+              "operationId",
+              "featureId",
+              "target",
+              "previewHash"
+            ]
           }
         }
       }
