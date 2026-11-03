@@ -4,11 +4,13 @@ This milestone adds two read-only report modules to the Compatibility Engine 2.0
 feature branch.
 
 ## Dependency preflight
-- Detects .NET Desktop shared runtimes, .NET Framework 4.8 release key,
+- Detects architecture-native .NET base and Windows Desktop shared runtimes, .NET Framework 4.8 release key,
   Windows App Runtime packages visible to the current user, Visual C++ runtime
   registry state, and optional PowerShell 7.6.
 - Checks .NET Framework 4.8 for the Windows 10 legacy WPF lane and .NET 10
-  Windows Desktop Runtime for the Windows 11 modern WinUI lane.
+  base runtime (Microsoft.NETCore.App) for a framework-dependent Windows 11 WinUI lane.
+- Reports .NET Windows Desktop runtime separately as optional for WPF/WinForms components;
+  it is not incorrectly treated as a universal WinUI prerequisite.
 - Deliberately reports Windows App SDK and Visual C++ deployment as
   packaging-mode-dependent. SAGE must first declare MSIX/framework-dependent
   versus unpackaged/self-contained deployment before calling either missing.
