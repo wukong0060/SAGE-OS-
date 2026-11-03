@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://sageos.dev/schemas/architecture/policy-decision-1.0.0.json",
+  "$id": "urn:sageos:schema:architecture:policy-decision:1.0.0",
   "title": "SAGE Policy Decision",
   "description": "Auditable policy-engine result for a specific operation request. UI state is never a substitute for this decision.",
   "type": "object",
