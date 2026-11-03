@@ -63,6 +63,9 @@ public sealed record OperationPreview(
 
 public sealed record ApprovalProof(
     string ActorId,
+    Guid OperationId,
+    string FeatureId,
+    OperationTarget Target,
     string PreviewHash,
     DateTimeOffset ExpiresAt,
     IReadOnlyList<string> ApprovedScopes);
