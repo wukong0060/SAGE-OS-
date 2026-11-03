@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://sageos.dev/schemas/architecture/transaction-journal-1.0.0.json",
+  "$id": "urn:sageos:schema:architecture:transaction-journal:1.0.0",
   "title": "SAGE Transaction Journal",
   "description": "Durable transaction record for mutating SAGE operations and their verification or compensation.",
   "type": "object",
