@@ -128,6 +128,9 @@ public interface IPreviewStore
     Task<OperationPreview?> GetAsync(
         string reference,
         CancellationToken cancellationToken);
+
+    // Must atomically mark the preview as consumed to prevent replay.
+    Task<bool> ConsumeAsync(string reference, CancellationToken cancellationToken);
 }
 
 public interface ITransactionJournal
