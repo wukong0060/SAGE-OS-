@@ -18,6 +18,7 @@ REGISTRY = ROOT / "Catalog" / "Architecture" / "SAGE-Architecture-6x6x6.json"
 SCHEMA_FILES = {
     "capability-descriptor.schema.json": {"schemaVersion", "id", "name", "ownerCore", "primarySuite", "status", "integrationStatus", "deploymentLanes", "validation"},
     "operation-request.schema.json": {"contractVersion", "operationId", "featureId", "caller", "action", "mode", "target", "riskTier", "requestedAt"},
+    "operation-preview.schema.json": {"schemaVersion", "reference", "operationId", "featureId", "target", "compatibilitySnapshotId", "previewHash", "expiresAt", "plannedChanges"},
     "policy-decision.schema.json": {"schemaVersion", "decisionId", "operationId", "decision", "riskTier", "policyVersion", "evaluatedAt", "reasons", "approval"},
     "transaction-journal.schema.json": {"schemaVersion", "transactionId", "operationId", "featureId", "state", "createdAt", "updatedAt", "steps", "recovery"},
     "evidence-record.schema.json": {"schemaVersion", "evidenceId", "recordType", "claimType", "observedAt", "source", "provenance", "privacyClass", "payload"},
@@ -145,6 +146,19 @@ def main() -> int:
     mutating_apply = dict(operation, action="apply", mode="mutating", riskTier="medium")
     check_instance("operation-request.schema.json", "mutating apply operation", mutating_apply, True)
 
+    preview_instance = {
+        "schemaVersion": "1.0.0",
+        "reference": "preview-1",
+        "operationId": operation["operationId"],
+        "featureId": "optimizer.temp-quarantine",
+        "target": {"scope": "user", "resource": "temp-files"},
+        "compatibilitySnapshotId": "compatibility-snapshot-1",
+        "previewHash": "c" * 64,
+        "expiresAt": "2026-11-03T20:00:00Z",
+        "plannedChanges": ["Quarantine selected eligible temporary files"]
+    }
+    check_instance("operation-preview.schema.json", "operation preview instance", preview_instance, True)
+
     policy = {
         "schemaVersion": "1.0.0",
         "decisionId": "22222222-2222-4222-8222-222222222222",
@@ -159,6 +173,31 @@ def main() -> int:
     check_instance("policy-decision.schema.json", "approval-required policy decision", policy, True)
     invalid_policy = dict(policy, approval={"required": False, "granted": False})
     check_instance("policy-decision.schema.json", "approval-required policy rejection", invalid_policy, False)
+    approved_policy = dict(policy, decision="allow", approval={
+        "required": True,
+        "granted": True,
+        "actorId": "test-user",
+        "grantedAt": "2026-11-03T19:00:00Z",
+        "approvedScopes": ["user"],
+        "expiresAt": "2026-11-03T19:05:00Z",
+        "operationId": operation["operationId"],
+        "featureId": "optimizer.temp-quarantine",
+        "target": {"scope": "user", "resource": "temp-files"},
+        "previewHash": "c" * 64
+    })
+    check_instance("policy-decision.schema.json", "preview-bound approval", approved_policy, True)
+    invalid_approved_policy = dict(approved_policy, approval={
+        "required": True,
+        "granted": True,
+        "actorId": "test-user",
+        "grantedAt": "2026-11-03T19:00:00Z",
+        "approvedScopes": ["user"],
+        "expiresAt": "2026-11-03T19:05:00Z",
+        "operationId": operation["operationId"],
+        "featureId": "optimizer.temp-quarantine",
+        "target": {"scope": "user", "resource": "temp-files"}
+    })
+    check_instance("policy-decision.schema.json", "approval without preview hash rejection", invalid_approved_policy, False)
 
     transaction = {
         "schemaVersion": "1.0.0",
