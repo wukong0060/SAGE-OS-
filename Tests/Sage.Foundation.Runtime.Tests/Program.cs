@@ -255,15 +255,19 @@ sealed class TestEnvironment
         return result;
     }
 
-    public ApprovalProof Approval(OperationResult preview) =>
-        new(
+    public ApprovalProof Approval(OperationResult preview)
+    {
+        var lastPreview = Handler.LastPreview
+            ?? throw new InvalidOperationException("The handler did not create a preview.");
+        return new ApprovalProof(
             "test-user",
-            Handler.LastPreview!.OperationId,
-            Handler.LastPreview.FeatureId,
-            Handler.LastPreview.Target,
-            Handler.LastPreview.PreviewHash,
+            lastPreview.OperationId,
+            lastPreview.FeatureId,
+            lastPreview.Target,
+            lastPreview.PreviewHash,
             Clock.UtcNow.AddMinutes(5),
             ["user"]);
+    }
 }
 
 sealed class MutableClock : IClock
@@ -455,7 +459,7 @@ sealed class FakeHandler : IOperationHandler
             request.FeatureId,
             request.Target,
             compatibility.SnapshotId,
-            "sha256-preview-hash",
+            new string('c', 64),
             new DateTimeOffset(2026, 11, 3, 20, 0, 0, TimeSpan.Zero),
             ["Quarantine selected eligible temporary files"]);
         return Task.FromResult(LastPreview!);
