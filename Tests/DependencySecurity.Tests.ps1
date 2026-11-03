@@ -17,13 +17,18 @@ Assert-Equal $r10missing.OverallState 'MissingRequiredDependency' 'Missing .NET 
 
 $compat11=[pscustomobject]@{CompatibilityTier='ModernCandidate';OSFamily='Windows11';Architecture='x64';ModernWinUIClientEligible=$true}
 $deps11=[pscustomobject]@{DotNetCoreVersions=@('10.0.14');DotNetDesktopVersions=@();WindowsAppRuntimePackages=@();VCRedistX64=[pscustomobject]@{State='Present';Version='14.x'};VCRedistARM64=[pscustomobject]@{State='Unknown';Version=$null};PowerShell76Available=$true}
-$r11=Get-SAGEDependencyReport -CompatibilityReport $compat11 -Facts $deps11
+$r11=Get-SAGEDependencyReport -CompatibilityReport $compat11 -Facts $deps11 -RuntimeDeploymentMode FrameworkDependent -PackageType Unpackaged
 Assert-Equal $r11.OverallState 'ReviewRequired' 'Win11 .NET 10 present'
 Assert-Equal $r11.RequiresPackagingPolicyDecision $true 'Packaging mode must be selected'
 
 $deps11.DotNetCoreVersions=@()
-$r11missing=Get-SAGEDependencyReport -CompatibilityReport $compat11 -Facts $deps11
+$r11missing=Get-SAGEDependencyReport -CompatibilityReport $compat11 -Facts $deps11 -RuntimeDeploymentMode FrameworkDependent -PackageType Unpackaged
 Assert-Equal $r11missing.OverallState 'MissingRequiredDependency' 'Missing .NET 10 detected'
+
+$deps11.DotNetCoreVersions=@()
+$r11selfContained=Get-SAGEDependencyReport -CompatibilityReport $compat11 -Facts $deps11 -RuntimeDeploymentMode SelfContained -PackageType MSIX
+Assert-Equal $r11selfContained.OverallState 'ReviewRequired' 'Self-contained app does not require machine .NET runtime'
+Assert-Equal $r11selfContained.Checks[0].State 'BundledNotRequired' 'Self-contained runtime is bundled'
 
 $secFacts=[pscustomobject]@{UACEnabled=$true;SecureBootEnabled=$true;MemoryIntegrityConfigured=$true;VBSStatus=2;HVCIRunning=$true;DefenderRealtimeProtectionEnabled=$true;SMBClientSigningRequired=$true;AppControlPolicyDetected=$false;SmartAppControlState='Enforced'}
 $sec=Get-SAGESecurityPosture -Facts $secFacts
