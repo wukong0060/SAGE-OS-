@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sageos:schema:architecture:capability-descriptor:1.0.0",
+  "title": "SAGE Capability Descriptor",
+  "description": "Canonical declaration of a SAGE feature's ownership, maturity, platform requirements and validation evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "name",
+    "ownerCore",
+    "primarySuite",
+    "status",
+    "integrationStatus",
+    "deploymentLanes",
+    "validation"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]{2,127}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 120
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "ownerCore": {
+      "enum": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6"
+      ]
+    },
+    "primarySuite": {
+      "enum": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6"
+      ]
+    },
+    "supportingCores": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "C1",
+          "C2",
+          "C3",
+          "C4",
+          "C5",
+          "C6"
+        ]
+      }
+    },
+    "status": {
+      "enum": [
+        "implemented_source_reported",
+        "partial",
+        "catalog_only",
+        "proposal_only",
+        "planned",
+        "excluded",
+        "blocked"
+      ]
+    },
+    "integrationStatus": {
+      "enum": [
+        "verified_in_source_tree",
+        "lineage_unresolved",
+        "not_integrated",
+        "blocked"
+      ]
+    },
+    "deploymentLanes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "standalone-modern",
+          "legacy-companion",
+          "ame-apbx"
+        ]
+      }
+    },
+    "requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "architectures": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "x64",
+              "arm64",
+              "x86",
+              "any",
+              "unknown"
+            ]
+          }
+        },
+        "windowsBuilds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 7600
+          }
+        },
+        "editions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 80
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9.-]{2,100}$"
+          }
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "static",
+        "windowsPowerShell51",
+        "windowsPowerShell7",
+        "nativeBuild",
+        "windows10Runtime",
+        "windows11Runtime",
+        "recovery",
+        "apbx"
+      ],
+      "properties": {
+        "static": {
+          "enum": [
+            "passed",
+            "failed",
+            "pending",
+            "not_applicable"
+          ]
+        },
+        "windowsPowerShell51": {
+          "enum": [
+            "passed",
+            "failed",
+            "pending",
+            "not_applicable"
+          ]
+        },
+        "windowsPowerShell7": {
+          "enum": [
+            "passed",
+            "failed",
+            "pending",
+            "not_applicable"
+          ]
+        },
+        "nativeBuild": {
+          "enum": [
+            "passed",
+            "failed",
+            "pending",
+            "not_applicable"
+          ]
+        },
+        "windows10Runtime": {
+          "enum": [
+            "passed",
+            "failed",
+            "pending",
+            "not_applicable"
+          ]
+        },
+        "windows11Runtime": {
+          "enum": [
+            "passed",
+            "failed",
+            "pending",
+            "not_applicable"
+          ]
+        },
+        "recovery": {
+          "enum": [
+            "passed",
+            "failed",
+            "pending",
+            "not_applicable"
+          ]
+        },
+        "apbx": {
+          "enum": [
+            "passed",
+            "failed",
+            "pending",
+            "not_applicable"
+          ]
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 300
+          }
+        }
+      }
+    },
+    "deprecatedAliases": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "maxLength": 128
+      }
+    },
+    "ownerNotes": {
+      "type": "string",
+      "maxLength": 2000
+    }
+  }
+}
