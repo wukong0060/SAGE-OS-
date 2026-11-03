@@ -40,6 +40,7 @@ $sec=Get-SAGESecurityPosture -Facts $secFacts
 Assert-Equal $sec.ReadOnlyAssessment $true 'Security posture is read-only'
 Assert-Equal $sec.AutoRemediationAllowed $false 'No security auto-remediation'
 Assert-Equal $sec.Items[0].State 'Enabled' 'UAC state normalized'
+Assert-Equal $sec.Items[3].State 'EnabledAndRunning' 'VBS runtime state mapping'
 Assert-Equal $sec.Items[8].State 'Enforced' 'Smart App Control state preserved'
 
 $unknownFacts=[pscustomobject]@{UACEnabled=$null;SecureBootEnabled=$null;MemoryIntegrityConfigured=$null;VBSStatus='Unknown';HVCIRunning=$null;DefenderRealtimeProtectionEnabled=$null;SMBClientSigningRequired=$null;AppControlPolicyDetected=$null;SmartAppControlState=$null}
