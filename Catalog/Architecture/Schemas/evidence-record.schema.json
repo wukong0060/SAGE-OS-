@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://sageos.dev/schemas/architecture/evidence-record-1.0.0.json",
+  "$id": "urn:sageos:schema:architecture:evidence-record:1.0.0",
   "title": "SAGE Evidence Record",
   "description": "Provenance-aware record for diagnostic findings, measurements, benchmarks and operation evidence.",
   "type": "object",
