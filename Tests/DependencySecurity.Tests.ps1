@@ -27,6 +27,10 @@ $r11missing=Get-SAGEDependencyReport -CompatibilityReport $compat11 -Facts $deps
 Assert-Equal $r11missing.OverallState 'MissingRequiredDependency' 'Missing .NET 10 detected'
 
 $deps11.DotNetCoreVersions=@()
+$r11unknownMode=Get-SAGEDependencyReport -CompatibilityReport $compat11 -Facts $deps11
+Assert-Equal $r11unknownMode.OverallState 'ReviewRequired' 'Unknown publish mode does not produce a false missing-runtime failure'
+Assert-Equal $r11unknownMode.Checks[0].State 'NotEvaluatedUntilPublishModeDeclared' 'Runtime requirement is deferred until publish mode is known'
+
 $r11selfContained=Get-SAGEDependencyReport -CompatibilityReport $compat11 -Facts $deps11 -RuntimeDeploymentMode SelfContained -PackageType MSIX
 Assert-Equal $r11selfContained.OverallState 'ReviewRequired' 'Self-contained app does not require machine .NET runtime'
 Assert-Equal $r11selfContained.Checks[0].State 'BundledNotRequired' 'Self-contained runtime is bundled'
@@ -42,5 +46,6 @@ $unknownFacts=[pscustomobject]@{UACEnabled=$null;SecureBootEnabled=$null;MemoryI
 $unknown=Get-SAGESecurityPosture -Facts $unknownFacts
 Assert-Equal $unknown.Items[0].State 'Unknown' 'Unavailable is not treated as disabled'
 Assert-Equal $unknown.Items[1].State 'Unknown' 'Secure Boot query failure remains unknown'
+Assert-Equal $unknown.Items[3].State 'Unknown' 'Nonnumeric VBS status remains unknown'
 
-Write-Output 'SAGE dependency and security preflight tests passed: 17 assertions.'
+Write-Output 'SAGE dependency and security preflight tests passed: 19 assertions.'
