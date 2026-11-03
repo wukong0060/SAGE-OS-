@@ -20,7 +20,7 @@ $deps11=[pscustomobject]@{DotNetCoreVersions=@('10.0.14');DotNetDesktopVersions=
 $r11=Get-SAGEDependencyReport -CompatibilityReport $compat11 -Facts $deps11 -RuntimeDeploymentMode FrameworkDependent -PackageType Unpackaged
 Assert-Equal $r11.OverallState 'ReviewRequired' 'Win11 .NET 10 present'
 Assert-Equal $r11.RequiresPackagingPolicyDecision $false 'Packaging modes are explicit'
-Assert-Equal $r11.Checks[3].State 'SharedRuntimePackageNotObserved' 'Unpackaged framework-dependent App SDK package check'
+Assert-Equal $r11.Checks[2].State 'SharedRuntimePackageNotObserved' 'Unpackaged framework-dependent App SDK package check'
 
 $deps11.DotNetCoreVersions=@()
 $r11missing=Get-SAGEDependencyReport -CompatibilityReport $compat11 -Facts $deps11 -RuntimeDeploymentMode FrameworkDependent -PackageType Unpackaged
