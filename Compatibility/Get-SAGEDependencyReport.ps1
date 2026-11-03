@@ -71,7 +71,9 @@ function Get-SAGEDependencyReport {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)][psobject]$CompatibilityReport,
-        [Parameter()][psobject]$Facts
+        [Parameter()][psobject]$Facts,
+        [Parameter()][ValidateSet('Unknown','FrameworkDependent','SelfContained')][string]$RuntimeDeploymentMode='Unknown',
+        [Parameter()][ValidateSet('Unknown','MSIX','Unpackaged')][string]$PackageType='Unknown'
     )
     if ($null -eq $Facts) { $Facts = Get-SAGEDependencyFacts }
 
@@ -93,8 +95,10 @@ function Get-SAGEDependencyReport {
     }
 
     if ($CompatibilityReport.OSFamily -eq 'Windows11' -and $CompatibilityReport.ModernWinUIClientEligible) {
-        $coreState = 'Missing'
+        $coreState = 'NotEvaluatedUntilPublishModeDeclared'
         if ($dotnetCore10.Count -gt 0) { $coreState = 'Present' }
+        elseif ($RuntimeDeploymentMode -eq 'FrameworkDependent') { $coreState = 'Missing' }
+        elseif ($RuntimeDeploymentMode -eq 'SelfContained') { $coreState = 'BundledNotRequired' }
         $checks += [pscustomobject]@{
             Name='.NET 10 base runtime (Microsoft.NETCore.App)'; State=$coreState
             RequiredFor='Framework-dependent modern .NET client'; DetectedVersion=($dotnetCore10 -join ',')
@@ -106,8 +110,9 @@ function Get-SAGEDependencyReport {
             RequiredFor='Optional; needed only by WPF/WinForms components'; DetectedVersion=($dotnetDesktop10 -join ',')
         }
         $checks += [pscustomobject]@{
-            Name='Windows App SDK runtime'; State='DeploymentModeDependent'
-            RequiredFor='Unpackaged framework-dependent WinUI deployment'; DetectedVersion=(@($Facts.WindowsAppRuntimePackages | ForEach-Object { $_.Version }) -join ',')
+            Name='Windows App SDK runtime'; State='NotEvaluatedUntilPackageTypeDeclared'
+            RequiredFor=($PackageType + ' deployment; verify framework package dependency or self-contained runtime policy')
+            DetectedVersion=(@($Facts.WindowsAppRuntimePackages | ForEach-Object { $_.Version }) -join ',')
         }
         $vc = $null
         if ($CompatibilityReport.Architecture -eq 'x64') { $vc = $Facts.VCRedistX64 }
@@ -129,7 +134,7 @@ function Get-SAGEDependencyReport {
     }
 
     $missingRequired = @($checks | Where-Object { $_.RequiredFor -like 'Windows 10 legacy*' -and $_.State -eq 'Missing' })
-    if ($CompatibilityReport.OSFamily -eq 'Windows11') {
+    if ($CompatibilityReport.OSFamily -eq 'Windows11' -and $RuntimeDeploymentMode -eq 'FrameworkDependent') {
         $missingRequired = @($checks | Where-Object { $_.Name -eq '.NET 10 base runtime (Microsoft.NETCore.App)' -and $_.State -eq 'Missing' })
     }
     $overall = 'ReviewRequired'
@@ -138,10 +143,11 @@ function Get-SAGEDependencyReport {
 
     return [pscustomobject]@{
         SchemaVersion='2.1'; OverallState=$overall; Checks=$checks
-        PerformsInstallation=$false; RequiresPackagingPolicyDecision=$true
+        PerformsInstallation=$false; RequiresPackagingPolicyDecision=($RuntimeDeploymentMode -eq 'Unknown' -or $PackageType -eq 'Unknown')
+        RuntimeDeploymentMode=$RuntimeDeploymentMode; PackageType=$PackageType
         Notes=@(
             'Runtime presence does not establish Microsoft platform support.',
-            'Windows App SDK and Visual C++ requirements depend on MSIX, framework-dependent, or self-contained publish mode.',
+            'Windows App SDK and Visual C++ requirements depend on MSIX versus unpackaged deployment and framework-dependent versus self-contained publishing.',
             'The modern WinUI application requires the .NET base runtime when framework-dependent; Windows Desktop runtime is only needed by WPF/WinForms components.',
             'PowerShell 7.6 is optional; Windows PowerShell 5.1 remains the administration compatibility baseline.'
         )
