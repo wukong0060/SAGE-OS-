@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Static consistency checks for the proposed SAGE 6x6x6 contract schemas.
+"""Validate SAGE 6x6x6 contract schemas and architecture cross-references.
 
-This validator uses only the Python standard library. It checks schema structure
-and architecture cross-references; it is not a JSON Schema instance validator.
+Requires jsonschema; validates Draft 2020-12 meta-schema correctness and the
+architecture registry references. Runtime contract enforcement is separate.
 """
 from __future__ import annotations
 
 import json
 from pathlib import Path
+
+from jsonschema import Draft202012Validator
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_DIR = ROOT / "Catalog" / "Architecture" / "Schemas"
@@ -49,6 +51,10 @@ def main() -> int:
             failures.append(f"missing required contract fields in {filename}: {sorted(expected_required - required)}")
         if schema.get("type") != "object":
             failures.append(f"top-level schema must be object: {filename}")
+        try:
+            Draft202012Validator.check_schema(schema)
+        except Exception as exc:
+            failures.append(f"invalid JSON Schema in {filename}: {exc}")
 
     try:
         registry = load_json(REGISTRY)
@@ -90,10 +96,10 @@ def main() -> int:
             print(f" - {failure}")
         return 1
 
-    print(f"PASS: {len(loaded)}/{len(SCHEMA_FILES)} contract schemas parsed and checked")
+    print(f"PASS: {len(loaded)}/{len(SCHEMA_FILES)} Draft 2020-12 schemas validated")
     print("PASS: architecture registry contains 6 foundations, 6 cores and 6 suites")
     print(f"PASS: {len(feature_ids)} unique feature IDs and valid core/suite references")
-    print("NOTE: static consistency only; full JSON Schema instance and Windows runtime tests remain separate")
+    print("NOTE: schema validity and registry consistency only; runtime contract enforcement and Windows tests remain separate")
     return 0
 
 if __name__ == "__main__":
