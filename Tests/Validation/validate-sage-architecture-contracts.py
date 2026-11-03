@@ -90,6 +90,130 @@ def main() -> int:
         if not set(feature.get("suites", [])).issubset(valid_suite_ids):
             failures.append(f"invalid suite reference for {feature.get('id')}")
 
+    # Exercise representative valid and invalid contract instances. These
+    # cases validate schema behavior, not runtime enforcement of the contracts.
+    instance_cases = 0
+
+    def check_instance(schema_name: str, label: str, instance: dict, expected_valid: bool) -> None:
+        nonlocal instance_cases
+        schema = loaded.get(schema_name)
+        if schema is None:
+            return
+        actual_valid = Draft202012Validator(schema).is_valid(instance)
+        instance_cases += 1
+        if actual_valid != expected_valid:
+            expectation = "valid" if expected_valid else "invalid"
+            failures.append(f"{label}: expected {expectation} instance")
+
+    capability = {
+        "schemaVersion": "1.0.0",
+        "id": "diagnostics.system-doctor",
+        "name": "System Doctor",
+        "ownerCore": "C3",
+        "primarySuite": "S1",
+        "status": "implemented_source_reported",
+        "integrationStatus": "lineage_unresolved",
+        "deploymentLanes": ["standalone-modern"],
+        "validation": {
+            "static": "passed",
+            "windowsPowerShell51": "pending",
+            "windowsPowerShell7": "pending",
+            "nativeBuild": "pending",
+            "windows10Runtime": "pending",
+            "windows11Runtime": "pending",
+            "recovery": "pending",
+            "apbx": "pending",
+            "evidenceRefs": ["Docs/SAGE-3.8.0-CAPABILITY-MAP.md"]
+        }
+    }
+    check_instance("capability-descriptor.schema.json", "capability descriptor example", capability, True)
+
+    operation = {
+        "contractVersion": "1.0.0",
+        "operationId": "11111111-1111-4111-8111-111111111111",
+        "featureId": "diagnostics.system-doctor",
+        "caller": {"coreId": "C3", "suiteId": "S1"},
+        "action": "inspect",
+        "mode": "read_only",
+        "target": {"scope": "user", "resource": "system"},
+        "riskTier": "none",
+        "requestedAt": "2026-11-03T19:00:00Z"
+    }
+    check_instance("operation-request.schema.json", "read-only inspect operation", operation, True)
+    invalid_read_only_apply = dict(operation, action="apply")
+    check_instance("operation-request.schema.json", "read-only apply rejection", invalid_read_only_apply, False)
+    mutating_apply = dict(operation, action="apply", mode="mutating", riskTier="medium")
+    check_instance("operation-request.schema.json", "mutating apply operation", mutating_apply, True)
+
+    policy = {
+        "schemaVersion": "1.0.0",
+        "decisionId": "22222222-2222-4222-8222-222222222222",
+        "operationId": operation["operationId"],
+        "decision": "require_approval",
+        "riskTier": "medium",
+        "policyVersion": "1.0.0",
+        "evaluatedAt": "2026-11-03T19:00:00Z",
+        "reasons": [{"code": "USER_APPROVAL_REQUIRED", "message": "Approval is required before mutation."}],
+        "approval": {"required": True, "granted": False}
+    }
+    check_instance("policy-decision.schema.json", "approval-required policy decision", policy, True)
+    invalid_policy = dict(policy, approval={"required": False, "granted": False})
+    check_instance("policy-decision.schema.json", "approval-required policy rejection", invalid_policy, False)
+
+    transaction = {
+        "schemaVersion": "1.0.0",
+        "transactionId": "33333333-3333-4333-8333-333333333333",
+        "operationId": operation["operationId"],
+        "featureId": "optimizer.temp-quarantine",
+        "state": "prepared",
+        "createdAt": "2026-11-03T19:00:00Z",
+        "updatedAt": "2026-11-03T19:00:00Z",
+        "steps": [],
+        "recovery": {"required": False, "state": "not_required", "attemptCount": 0}
+    }
+    check_instance("transaction-journal.schema.json", "prepared transaction journal", transaction, True)
+
+    evidence = {
+        "schemaVersion": "1.0.0",
+        "evidenceId": "44444444-4444-4444-8444-444444444444",
+        "featureId": "diagnostics.system-doctor",
+        "recordType": "measurement",
+        "claimType": "observed",
+        "observedAt": "2026-11-03T19:00:00Z",
+        "source": {"kind": "windows_api", "name": "GlobalMemoryStatusEx"},
+        "provenance": {"captureMethod": "Windows API query", "sourceVersion": "1"},
+        "confidence": 1.0,
+        "privacyClass": "none",
+        "payload": {"availablePhysicalBytes": 1048576}
+    }
+    check_instance("evidence-record.schema.json", "observed evidence record", evidence, True)
+
+    release = {
+        "manifestVersion": "1.0.0",
+        "product": "SAGE OS",
+        "version": "3.8.0-preview.1",
+        "channel": "preview",
+        "createdAt": "2026-11-03T19:00:00Z",
+        "source": {"repository": "wukong0060/SAGE-OS-", "commit": "a" * 40},
+        "artifacts": [{
+            "name": "SAGE-Control-Center-x64",
+            "path": "artifacts/SAGE-Control-Center-x64.zip",
+            "sha256": "a" * 64,
+            "sizeBytes": 1024,
+            "architecture": "x64",
+            "kind": "control_center"
+        }],
+        "signer": {
+            "identity": "SAGE Release",
+            "algorithm": "Ed25519",
+            "certificateFingerprint": "b" * 40
+        },
+        "signature": {"algorithm": "Ed25519", "encoding": "base64", "value": "c2ln"}
+    }
+    check_instance("release-trust-manifest.schema.json", "release trust manifest", release, True)
+    invalid_release = dict(release, version="3x8x0")
+    check_instance("release-trust-manifest.schema.json", "invalid release version rejection", invalid_release, False)
+
     if failures:
         print("SAGE architecture contract validation FAILED")
         for failure in failures:
@@ -99,6 +223,7 @@ def main() -> int:
     print(f"PASS: {len(loaded)}/{len(SCHEMA_FILES)} Draft 2020-12 schemas validated")
     print("PASS: architecture registry contains 6 foundations, 6 cores and 6 suites")
     print(f"PASS: {len(feature_ids)} unique feature IDs and valid core/suite references")
+    print(f"PASS: {instance_cases} positive/negative contract instance checks")
     print("NOTE: schema validity and registry consistency only; runtime contract enforcement and Windows tests remain separate")
     return 0
 
