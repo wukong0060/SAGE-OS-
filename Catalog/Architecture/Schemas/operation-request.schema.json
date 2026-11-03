@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://sageos.dev/schemas/architecture/operation-request-1.0.0.json",
+  "$id": "urn:sageos:schema:architecture:operation-request:1.0.0",
   "title": "SAGE Operation Request",
   "description": "Typed request envelope accepted by the SAGE operation broker. A request is not authorization to execute.",
   "type": "object",
