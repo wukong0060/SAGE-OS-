@@ -23,4 +23,10 @@ $e=Get-SAGECompatibilityReport (New-Facts 'Windows Server' '2025' '26100' 'x64' 
 Assert-Equal $e.CompatibilityTier 'Unsupported' 'Server excluded'
 $f=Get-SAGECompatibilityReport (New-Facts 'Unknown Windows' 'unknown' '0')
 Assert-Equal $f.CompatibilityTier 'Unsupported' 'unknown fails closed'
-Write-Output 'SAGE Compatibility Engine 2.0 tests passed: 12 assertions.'
+$serverFallback=Get-SAGECompatibilityReport (New-Facts 'Windows Server 2025' '2025' '26100' 'x64' 0)
+Assert-Equal $serverFallback.CompatibilityTier 'Unsupported' 'Server identity fallback'
+$unknownArch=Get-SAGECompatibilityReport (New-Facts 'Windows 11 Pro' '25H2' '26200' 'Unknown')
+Assert-Equal $unknownArch.CompatibilityTier 'Unsupported' 'Unknown architecture fails closed'
+$arm11=Get-SAGECompatibilityReport (New-Facts 'Windows 11 Pro' '25H2' '26200' 'ARM64')
+Assert-Equal $arm11.ModernWinUIClientEligible $true 'Windows 11 ARM64 candidate'
+Write-Output 'SAGE Compatibility Engine 2.0 tests passed: 14 assertions.'
