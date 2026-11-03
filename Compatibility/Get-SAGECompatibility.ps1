@@ -4,17 +4,13 @@ function Get-SAGERegistryValue {
  [CmdletBinding()] param([Parameter(Mandatory=$true)][string]$Path,[Parameter(Mandatory=$true)][string]$Name)
  try { $item=Get-ItemProperty -LiteralPath $Path -Name $Name -ErrorAction Stop; return $item.$Name } catch { return $null }
 }
-function Test-SAGEDotNet10DesktopRuntime {
+function Test-SAGEDotNet10Runtime {
  [CmdletBinding()] param()
- $roots=@()
- if($env:ProgramFiles){$roots+=(Join-Path $env:ProgramFiles 'dotnet\shared\Microsoft.WindowsDesktop.App')}
- $pf86=[Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
- if($pf86){$roots+=(Join-Path $pf86 'dotnet\shared\Microsoft.WindowsDesktop.App')}
- foreach($root in $roots){
-  if(Test-Path -LiteralPath $root -PathType Container){
-   $runtime=Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue | Where-Object {$_.Name -match '^10\.0\.'} | Select-Object -First 1
-   if($null -ne $runtime){return $true}
-  }
+ $root=$null
+ if($env:ProgramFiles){$root=Join-Path $env:ProgramFiles 'dotnet\shared\Microsoft.NETCore.App'}
+ if($root -and (Test-Path -LiteralPath $root -PathType Container)){
+  $runtime=Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue | Where-Object {$_.Name -match '^10\.0\.'} | Select-Object -First 1
+  if($null -ne $runtime){return $true}
  }
  return $false
 }
@@ -32,7 +28,7 @@ function Get-SAGECompatibilityFacts {
   EditionID=[string](Get-SAGERegistryValue $p 'EditionID'); InstallationType=[string](Get-SAGERegistryValue $p 'InstallationType')
   Architecture=$arch; ProductType=if($null -ne $os){[int]$os.ProductType}else{0}
   PowerShellVersion=[string]$PSVersionTable.PSVersion; PowerShellEdition=[string]$PSVersionTable.PSEdition
-  PowerShell7Available=[bool]$ps7; DotNet10DesktopRuntimePresent=[bool](Test-SAGEDotNet10DesktopRuntime)
+  PowerShell7Available=[bool]$ps7; DotNet10RuntimePresent=[bool](Test-SAGEDotNet10Runtime)
  }
 }
 function Get-SAGECompatibilityReport {
@@ -56,7 +52,7 @@ function Get-SAGECompatibilityReport {
   CompatibilityTier=$tier;CompatibilityReason=$reason;ServicingStatus=$servicing;ServicingStatusIsVerified=$false
   LegacyClientEligible=$legacy;ModernWinUIClientEligible=$modern;Windows11CustomizationEligible=$custom;PreferredTestTarget=$preferred
   PowerShellVersion=[string]$Facts.PowerShellVersion;PowerShellEdition=[string]$Facts.PowerShellEdition
-  PowerShell7Available=[bool]$Facts.PowerShell7Available;DotNet10DesktopRuntimePresent=[bool]$Facts.DotNet10DesktopRuntimePresent
+  PowerShell7Available=[bool]$Facts.PowerShell7Available;DotNet10RuntimePresent=[bool]$Facts.DotNet10RuntimePresent
   RequiresNativeValidation=$true;ReadOnlyAssessment=$true
  }
 }
