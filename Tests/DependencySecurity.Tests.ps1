@@ -6,7 +6,7 @@ $ErrorActionPreference='Stop'
 function Assert-Equal { param([object]$Actual,[object]$Expected,[string]$Name) if($Actual -ne $Expected){throw ("FAIL: {0}; expected [{1}], got [{2}]" -f $Name,$Expected,$Actual)} }
 
 $compat10=[pscustomobject]@{CompatibilityTier='LegacyCompatibility';OSFamily='Windows10';Architecture='x64'}
-$deps10=[pscustomobject]@{DotNetDesktopVersions=@();DotNetFrameworkRelease=528040;WindowsAppRuntimePackages=@();VCRedistX64=[pscustomobject]@{State='Present';Version='14.x'};VCRedistARM64=[pscustomobject]@{State='Unknown';Version=$null};PowerShell76Available=$false}
+$deps10=[pscustomobject]@{DotNetCoreVersions=@();DotNetDesktopVersions=@();DotNetFrameworkRelease=528040;WindowsAppRuntimePackages=@();VCRedistX64=[pscustomobject]@{State='Present';Version='14.x'};VCRedistARM64=[pscustomobject]@{State='Unknown';Version=$null};PowerShell76Available=$false}
 $r10=Get-SAGEDependencyReport -CompatibilityReport $compat10 -Facts $deps10
 Assert-Equal $r10.OverallState 'ReviewRequired' 'Win10 framework runtime is present'
 Assert-Equal $r10.PerformsInstallation $false 'Dependency check never installs'
@@ -16,12 +16,12 @@ $r10missing=Get-SAGEDependencyReport -CompatibilityReport $compat10 -Facts $deps
 Assert-Equal $r10missing.OverallState 'MissingRequiredDependency' 'Missing .NET Framework 4.8 detected'
 
 $compat11=[pscustomobject]@{CompatibilityTier='ModernCandidate';OSFamily='Windows11';Architecture='x64';ModernWinUIClientEligible=$true}
-$deps11=[pscustomobject]@{DotNetDesktopVersions=@('10.0.14');WindowsAppRuntimePackages=@();VCRedistX64=[pscustomobject]@{State='Present';Version='14.x'};VCRedistARM64=[pscustomobject]@{State='Unknown';Version=$null};PowerShell76Available=$true}
+$deps11=[pscustomobject]@{DotNetCoreVersions=@('10.0.14');DotNetDesktopVersions=@();WindowsAppRuntimePackages=@();VCRedistX64=[pscustomobject]@{State='Present';Version='14.x'};VCRedistARM64=[pscustomobject]@{State='Unknown';Version=$null};PowerShell76Available=$true}
 $r11=Get-SAGEDependencyReport -CompatibilityReport $compat11 -Facts $deps11
 Assert-Equal $r11.OverallState 'ReviewRequired' 'Win11 .NET 10 present'
 Assert-Equal $r11.RequiresPackagingPolicyDecision $true 'Packaging mode must be selected'
 
-$deps11.DotNetDesktopVersions=@()
+$deps11.DotNetCoreVersions=@()
 $r11missing=Get-SAGEDependencyReport -CompatibilityReport $compat11 -Facts $deps11
 Assert-Equal $r11missing.OverallState 'MissingRequiredDependency' 'Missing .NET 10 detected'
 
