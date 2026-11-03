@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://sageos.dev/schemas/architecture/capability-descriptor-1.0.0.json",
+  "$id": "urn:sageos:schema:architecture:capability-descriptor:1.0.0",
   "title": "SAGE Capability Descriptor",
   "description": "Canonical declaration of a SAGE feature's ownership, maturity, platform requirements and validation evidence.",
   "type": "object",
