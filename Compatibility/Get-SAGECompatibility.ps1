@@ -24,7 +24,7 @@ function Get-SAGECompatibilityFacts {
  try{$os=Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Stop}catch{try{$os=Get-WmiObject -Class Win32_OperatingSystem -ErrorAction Stop}catch{}}
  $arch='Unknown'
  if($null -ne $os -and $os.OSArchitecture){if([string]$os.OSArchitecture -match 'ARM'){$arch='ARM64'}elseif([string]$os.OSArchitecture -match '64'){$arch='x64'}elseif([string]$os.OSArchitecture -match '32'){$arch='x86'}}
- elseif([Environment]::Is64BitOperatingSystem){$arch='x64'}else{$arch='x86'}
+ else{$arch='Unknown'}
  $ps7=$false; try{$ps7=($null -ne (Get-Command pwsh.exe -ErrorAction SilentlyContinue))}catch{}
  [pscustomobject]@{
   ProductName=[string](Get-SAGERegistryValue $p 'ProductName'); DisplayVersion=[string](Get-SAGERegistryValue $p 'DisplayVersion')
@@ -40,7 +40,7 @@ function Get-SAGECompatibilityReport {
  if($null -eq $Facts){$Facts=Get-SAGECompatibilityFacts}
  $build=0; if(-not [int]::TryParse([string]$Facts.CurrentBuildNumber,[ref]$build)){$build=0}
  $name=[string]$Facts.ProductName; $version=[string]$Facts.DisplayVersion; $arch=[string]$Facts.Architecture
- $server=([int]$Facts.ProductType -ne 1 -and [int]$Facts.ProductType -ne 0)
+ $server=(([int]$Facts.ProductType -eq 2) -or ([int]$Facts.ProductType -eq 3) -or ($name -match 'Windows Server') -or ([string]$Facts.InstallationType -match 'Server'))
  $family='Unknown'; if($name -match 'Windows 11' -or $build -ge 22000){$family='Windows11'}elseif($name -match 'Windows 10'){$family='Windows10'}
  $tier='Unsupported'; $reason='The detected operating system is outside the declared SAGE compatibility baseline.'
  $legacy=$false; $modern=$false; $custom=$false; $preferred=$false
