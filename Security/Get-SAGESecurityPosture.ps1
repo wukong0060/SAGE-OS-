@@ -89,11 +89,21 @@ function Get-SAGESecurityPosture {
     param([Parameter()][psobject]$Facts)
     if ($null -eq $Facts) { $Facts = Get-SAGESecurityFacts }
 
+    $vbsState = 'Unknown'
+    if ($null -ne $Facts.VBSStatus) {
+        switch ([int]$Facts.VBSStatus) {
+            0 { $vbsState='Disabled' }
+            1 { $vbsState='EnabledNotRunning' }
+            2 { $vbsState='EnabledAndRunning' }
+            default { $vbsState='Unknown' }
+        }
+    }
+
     $items = @(
         [pscustomobject]@{ Name='User Account Control'; State=(ConvertTo-SAGESecurityState $Facts.UACEnabled); Detail='UAC is observed, never modified by SAGE.' }
         [pscustomobject]@{ Name='Secure Boot'; State=(ConvertTo-SAGESecurityState $Facts.SecureBootEnabled); Detail='Firmware capability and state may require manual firmware/update verification.' }
         [pscustomobject]@{ Name='Memory Integrity'; State=(ConvertTo-SAGESecurityState $Facts.MemoryIntegrityConfigured); Detail='Configured state; check HVCI runtime state separately.' }
-        [pscustomobject]@{ Name='VBS'; State=[string]$Facts.VBSStatus; Detail='0=disabled, 1=enabled but not running, 2=enabled and running; Unknown means query unavailable.' }
+        [pscustomobject]@{ Name='VBS'; State=$vbsState; Detail='0=disabled, 1=enabled but not running, 2=enabled and running; Unknown means query unavailable.' }
         [pscustomobject]@{ Name='HVCI running'; State=(ConvertTo-SAGESecurityState $Facts.HVCIRunning); Detail='Runtime state, not inferred from registry configuration.' }
         [pscustomobject]@{ Name='Defender real-time protection'; State=(ConvertTo-SAGESecurityState $Facts.DefenderRealtimeProtectionEnabled); Detail='Unknown may mean Defender cmdlets are unavailable or access was denied.' }
         [pscustomobject]@{ Name='SMB client signing required'; State=(ConvertTo-SAGESecurityState $Facts.SMBClientSigningRequired); Detail='Reports the local client setting; server policy and negotiated session still matter.' }
