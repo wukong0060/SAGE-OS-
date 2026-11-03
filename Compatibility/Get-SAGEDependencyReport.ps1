@@ -2,22 +2,20 @@
 # Read-only checks only. Does not download, install, repair, or remove software.
 Set-StrictMode -Version 2.0
 
-function Get-SAGEDotNetDesktopVersions {
+function Get-SAGEDotNetRuntimeVersions {
     [CmdletBinding()]
     param()
-    $roots = @()
-    if ($env:ProgramFiles) { $roots += (Join-Path $env:ProgramFiles 'dotnet\shared\Microsoft.WindowsDesktop.App') }
-    $pf86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
-    if ($pf86) { $roots += (Join-Path $pf86 'dotnet\shared\Microsoft.WindowsDesktop.App') }
-
-    $versions = @()
-    foreach ($root in $roots) {
-        if (Test-Path -LiteralPath $root -PathType Container) {
-            $versions += Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue |
-                ForEach-Object { $_.Name }
-        }
+    $root = $null
+    if ($env:ProgramFiles) { $root = Join-Path $env:ProgramFiles 'dotnet\shared' }
+    $core = @()
+    $desktop = @()
+    if ($root -and (Test-Path -LiteralPath (Join-Path $root 'Microsoft.NETCore.App') -PathType Container)) {
+        $core = @(Get-ChildItem -LiteralPath (Join-Path $root 'Microsoft.NETCore.App') -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
     }
-    return @($versions | Sort-Object -Unique)
+    if ($root -and (Test-Path -LiteralPath (Join-Path $root 'Microsoft.WindowsDesktop.App') -PathType Container)) {
+        $desktop = @(Get-ChildItem -LiteralPath (Join-Path $root 'Microsoft.WindowsDesktop.App') -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
+    }
+    return [pscustomobject]@{ Core=@($core | Sort-Object -Unique); Desktop=@($desktop | Sort-Object -Unique) }
 }
 
 function Get-SAGEVCRuntimeState {
@@ -26,14 +24,9 @@ function Get-SAGEVCRuntimeState {
     $path = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\' + $Architecture
     try {
         $item = Get-ItemProperty -LiteralPath $path -ErrorAction Stop
-        if ([int]$item.Installed -eq 1) {
-            return [pscustomobject]@{ State='Present'; Version=[string]$item.Version }
-        }
+        if ([int]$item.Installed -eq 1) { return [pscustomobject]@{ State='Present'; Version=[string]$item.Version } }
         return [pscustomobject]@{ State='Missing'; Version=$null }
-    }
-    catch {
-        return [pscustomobject]@{ State='Unknown'; Version=$null }
-    }
+    } catch { return [pscustomobject]@{ State='Unknown'; Version=$null } }
 }
 
 function Get-SAGEDependencyFacts {
@@ -62,8 +55,10 @@ function Get-SAGEDependencyFacts {
         } else { $pwsh76 = $false }
     } catch { }
 
+    $dotnet = Get-SAGEDotNetRuntimeVersions
     return [pscustomobject]@{
-        DotNetDesktopVersions = @(Get-SAGEDotNetDesktopVersions)
+        DotNetCoreVersions = @($dotnet.Core)
+        DotNetDesktopVersions = @($dotnet.Desktop)
         DotNetFrameworkRelease = $frameworkRelease
         WindowsAppRuntimePackages = @($appRuntime)
         VCRedistX64 = Get-SAGEVCRuntimeState -Architecture x64
@@ -80,7 +75,8 @@ function Get-SAGEDependencyReport {
     )
     if ($null -eq $Facts) { $Facts = Get-SAGEDependencyFacts }
 
-    $dotnet10 = @($Facts.DotNetDesktopVersions | Where-Object { [string]$_ -match '^10\.0\.' })
+    $dotnetCore10 = @($Facts.DotNetCoreVersions | Where-Object { [string]$_ -match '^10\.0\.' })
+    $dotnetDesktop10 = @($Facts.DotNetDesktopVersions | Where-Object { [string]$_ -match '^10\.0\.' })
     $framework48 = $false
     if ($null -ne $Facts.DotNetFrameworkRelease) { $framework48 = ([int]$Facts.DotNetFrameworkRelease -ge 528040) }
 
@@ -97,11 +93,17 @@ function Get-SAGEDependencyReport {
     }
 
     if ($CompatibilityReport.OSFamily -eq 'Windows11' -and $CompatibilityReport.ModernWinUIClientEligible) {
-        $dotnetState = 'Missing'
-        if ($dotnet10.Count -gt 0) { $dotnetState = 'Present' }
+        $coreState = 'Missing'
+        if ($dotnetCore10.Count -gt 0) { $coreState = 'Present' }
         $checks += [pscustomobject]@{
-            Name='.NET 10 Windows Desktop Runtime'; State=$dotnetState
-            RequiredFor='Framework-dependent modern desktop client'; DetectedVersion=($dotnet10 -join ',')
+            Name='.NET 10 base runtime (Microsoft.NETCore.App)'; State=$coreState
+            RequiredFor='Framework-dependent modern .NET client'; DetectedVersion=($dotnetCore10 -join ',')
+        }
+        $desktopState = 'NotDetected'
+        if ($dotnetDesktop10.Count -gt 0) { $desktopState = 'Present' }
+        $checks += [pscustomobject]@{
+            Name='.NET 10 Windows Desktop runtime'; State=$desktopState
+            RequiredFor='Optional; needed only by WPF/WinForms components'; DetectedVersion=($dotnetDesktop10 -join ',')
         }
         $checks += [pscustomobject]@{
             Name='Windows App SDK runtime'; State='DeploymentModeDependent'
@@ -110,8 +112,7 @@ function Get-SAGEDependencyReport {
         $vc = $null
         if ($CompatibilityReport.Architecture -eq 'x64') { $vc = $Facts.VCRedistX64 }
         elseif ($CompatibilityReport.Architecture -eq 'ARM64') { $vc = $Facts.VCRedistARM64 }
-        $vcState = 'Unknown'
-        $vcVersion = $null
+        $vcState = 'Unknown'; $vcVersion = $null
         if ($null -ne $vc) { $vcState = [string]$vc.State; $vcVersion = [string]$vc.Version }
         $checks += [pscustomobject]@{
             Name='Visual C++ 2015-2022 Redistributable'; State=$vcState
@@ -129,7 +130,7 @@ function Get-SAGEDependencyReport {
 
     $missingRequired = @($checks | Where-Object { $_.RequiredFor -like 'Windows 10 legacy*' -and $_.State -eq 'Missing' })
     if ($CompatibilityReport.OSFamily -eq 'Windows11') {
-        $missingRequired = @($checks | Where-Object { $_.Name -eq '.NET 10 Windows Desktop Runtime' -and $_.State -eq 'Missing' })
+        $missingRequired = @($checks | Where-Object { $_.Name -eq '.NET 10 base runtime (Microsoft.NETCore.App)' -and $_.State -eq 'Missing' })
     }
     $overall = 'ReviewRequired'
     if ($missingRequired.Count -gt 0) { $overall = 'MissingRequiredDependency' }
@@ -140,7 +141,8 @@ function Get-SAGEDependencyReport {
         PerformsInstallation=$false; RequiresPackagingPolicyDecision=$true
         Notes=@(
             'Runtime presence does not establish Microsoft platform support.',
-            'Windows App SDK and VC++ requirements depend on the actual MSIX, framework-dependent, or self-contained publish mode.',
+            'Windows App SDK and Visual C++ requirements depend on MSIX, framework-dependent, or self-contained publish mode.',
+            'The modern WinUI application requires the .NET base runtime when framework-dependent; Windows Desktop runtime is only needed by WPF/WinForms components.',
             'PowerShell 7.6 is optional; Windows PowerShell 5.1 remains the administration compatibility baseline.'
         )
     }
