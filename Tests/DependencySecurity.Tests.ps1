@@ -19,7 +19,8 @@ $compat11=[pscustomobject]@{CompatibilityTier='ModernCandidate';OSFamily='Window
 $deps11=[pscustomobject]@{DotNetCoreVersions=@('10.0.14');DotNetDesktopVersions=@();WindowsAppRuntimePackages=@();VCRedistX64=[pscustomobject]@{State='Present';Version='14.x'};VCRedistARM64=[pscustomobject]@{State='Unknown';Version=$null};PowerShell76Available=$true}
 $r11=Get-SAGEDependencyReport -CompatibilityReport $compat11 -Facts $deps11 -RuntimeDeploymentMode FrameworkDependent -PackageType Unpackaged
 Assert-Equal $r11.OverallState 'ReviewRequired' 'Win11 .NET 10 present'
-Assert-Equal $r11.RequiresPackagingPolicyDecision $true 'Packaging mode must be selected'
+Assert-Equal $r11.RequiresPackagingPolicyDecision $false 'Packaging modes are explicit'
+Assert-Equal $r11.Checks[3].State 'SharedRuntimePackageNotObserved' 'Unpackaged framework-dependent App SDK package check'
 
 $deps11.DotNetCoreVersions=@()
 $r11missing=Get-SAGEDependencyReport -CompatibilityReport $compat11 -Facts $deps11 -RuntimeDeploymentMode FrameworkDependent -PackageType Unpackaged
@@ -42,4 +43,4 @@ $unknown=Get-SAGESecurityPosture -Facts $unknownFacts
 Assert-Equal $unknown.Items[0].State 'Unknown' 'Unavailable is not treated as disabled'
 Assert-Equal $unknown.Items[1].State 'Unknown' 'Secure Boot query failure remains unknown'
 
-Write-Output 'SAGE dependency and security preflight tests passed: 14 assertions.'
+Write-Output 'SAGE dependency and security preflight tests passed: 17 assertions.'
