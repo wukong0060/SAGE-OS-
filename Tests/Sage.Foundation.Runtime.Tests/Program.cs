@@ -21,7 +21,8 @@ sealed class BrokerTests
         await Run("changed compatibility snapshot invalidates preview", StalePreviewIsRejectedAsync);
         await Run("read-only apply request is rejected", ReadOnlyApplyIsRejectedAsync);
         await Run("a successful preview cannot be replayed", PreviewIsSingleUseAsync);
-        Console.WriteLine($"PASS: {_passed}/11 broker safety tests");
+        await Run("approval is bound to the exact operation and target", ApprovalTargetMismatchIsRejectedAsync);
+        Console.WriteLine($"PASS: {_passed}/12 broker safety tests");
     }
 
     private async Task Run(string name, Func<Task> test)
@@ -172,6 +173,27 @@ sealed class BrokerTests
         Assert(env.Handler.ApplyCalls == 1, "consumed preview must not execute twice");
     }
 
+    private async Task ApprovalTargetMismatchIsRejectedAsync()
+    {
+        var env = new TestEnvironment(
+            previewDecision: new(false, true, false, ["APPROVAL_REQUIRED"]),
+            applyDecision: new(true, true, true, []));
+        var preview = await env.CreatePreviewAsync();
+        var validProof = env.Approval(preview);
+        var alteredProof = validProof with
+        {
+            Target = new OperationTarget("user", "different-target")
+        };
+
+        var result = await env.Broker.ApplyAsync(
+            env.Request(OperationAction.Apply, OperationMode.Mutating, preview.PreviewReference),
+            alteredProof);
+
+        Assert(result.ResultCode == "APPROVAL_INVALID", "approval for another target must be rejected");
+        Assert(env.Handler.ApplyCalls == 0, "mismatched approval must not reach the handler");
+        Assert(!env.Journal.Prepared, "mismatched approval must not prepare a transaction");
+    }
+
     private static void Assert(bool condition, string message)
     {
         if (!condition) throw new InvalidOperationException(message);
@@ -234,8 +256,14 @@ sealed class TestEnvironment
     }
 
     public ApprovalProof Approval(OperationResult preview) =>
-        new("test-user", Handler.LastPreview!.PreviewHash,
-            Clock.UtcNow.AddMinutes(5), ["user"]);
+        new(
+            "test-user",
+            Handler.LastPreview!.OperationId,
+            Handler.LastPreview.FeatureId,
+            Handler.LastPreview.Target,
+            Handler.LastPreview.PreviewHash,
+            Clock.UtcNow.AddMinutes(5),
+            ["user"]);
 }
 
 sealed class MutableClock : IClock
@@ -291,6 +319,9 @@ sealed class FakeApprovalVerifier : IApprovalVerifier
         CancellationToken cancellationToken) =>
         Task.FromResult(
             proof.ExpiresAt > _clock.UtcNow &&
+            proof.OperationId == request.OperationId &&
+            proof.FeatureId == request.FeatureId &&
+            proof.Target == request.Target &&
             proof.PreviewHash == preview.PreviewHash &&
             proof.ApprovedScopes.Contains(request.Target.Scope));
 }
