@@ -20,7 +20,8 @@ sealed class BrokerTests
         await Run("expired preview cannot be applied", ExpiredPreviewIsRejectedAsync);
         await Run("changed compatibility snapshot invalidates preview", StalePreviewIsRejectedAsync);
         await Run("read-only apply request is rejected", ReadOnlyApplyIsRejectedAsync);
-        Console.WriteLine($"PASS: {_passed}/10 broker safety tests");
+        await Run("a successful preview cannot be replayed", PreviewIsSingleUseAsync);
+        Console.WriteLine($"PASS: {_passed}/11 broker safety tests");
     }
 
     private async Task Run(string name, Func<Task> test)
@@ -122,7 +123,7 @@ sealed class BrokerTests
             previewDecision: new(false, true, false, ["APPROVAL_REQUIRED"]),
             applyDecision: new(true, true, true, []));
         var preview = await env.CreatePreviewAsync();
-        env.Clock.Advance(TimeSpan.FromMinutes(20));
+        env.Clock.Advance(TimeSpan.FromHours(2));
         var result = await env.Broker.ApplyAsync(
             env.Request(OperationAction.Apply, OperationMode.Mutating, preview.PreviewReference),
             env.Approval(preview));
@@ -154,6 +155,23 @@ sealed class BrokerTests
         Assert(env.Handler.ApplyCalls == 0, "no handler mutation should occur");
     }
 
+    private async Task PreviewIsSingleUseAsync()
+    {
+        var env = new TestEnvironment(
+            previewDecision: new(false, true, false, ["APPROVAL_REQUIRED"]),
+            applyDecision: new(true, true, true, []));
+        var preview = await env.CreatePreviewAsync();
+        var request = env.Request(OperationAction.Apply, OperationMode.Mutating, preview.PreviewReference);
+        var proof = env.Approval(preview);
+
+        var first = await env.Broker.ApplyAsync(request, proof);
+        var second = await env.Broker.ApplyAsync(request, proof);
+
+        Assert(first.State == "succeeded", "first application should succeed");
+        Assert(second.ResultCode == "PREVIEW_ALREADY_CONSUMED", "replay must be rejected");
+        Assert(env.Handler.ApplyCalls == 1, "consumed preview must not execute twice");
+    }
+
     private static void Assert(bool condition, string message)
     {
         if (!condition) throw new InvalidOperationException(message);
@@ -164,6 +182,7 @@ sealed class TestEnvironment
 {
     public MutableClock Clock { get; } = new();
     public FakeJournal Journal { get; } = new();
+    public FakePreviewStore Previews { get; } = new();
     public FakeHandler Handler { get; }
     public FakeCompatibility Compatibility { get; }
     public OperationBroker Broker { get; }
@@ -185,7 +204,7 @@ sealed class TestEnvironment
             Compatibility,
             policy,
             new FakeApprovalVerifier(Clock),
-            new FakePreviewStore(),
+            Previews,
             Journal,
             registry,
             Clock);
@@ -209,7 +228,8 @@ sealed class TestEnvironment
     {
         var result = await Broker.CreatePreviewAsync(
             Request(OperationAction.Preview, OperationMode.Mutating));
-        Assert(result.State is "preview_ready" or "awaiting_approval", "preview should be created");
+        if (result.State is not ("preview_ready" or "awaiting_approval"))
+            throw new InvalidOperationException("preview should be created");
         return result;
     }
 
@@ -290,6 +310,15 @@ sealed class FakePreviewStore : IPreviewStore
         _items.TryGetValue(reference, out var preview);
         return Task.FromResult(preview);
     }
+
+    public Task<bool> ConsumeAsync(string reference, CancellationToken cancellationToken)
+    {
+        if (!_items.ContainsKey(reference) || !_consumed.Add(reference))
+            return Task.FromResult(false);
+        return Task.FromResult(true);
+    }
+
+    private readonly HashSet<string> _consumed = new(StringComparer.Ordinal);
 }
 
 sealed class FakeRegistry : IOperationHandlerRegistry
@@ -398,7 +427,7 @@ sealed class FakeHandler : IOperationHandler
             "sha256-preview-hash",
             new DateTimeOffset(2026, 11, 3, 20, 0, 0, TimeSpan.Zero),
             ["Quarantine selected eligible temporary files"]);
-        return Task.FromResult(LastPreview);
+        return Task.FromResult(LastPreview!);
     }
 
     public Task<OperationExecution> ApplyAsync(
