@@ -109,8 +109,15 @@ function Get-SAGEDependencyReport {
             Name='.NET 10 Windows Desktop runtime'; State=$desktopState
             RequiredFor='Optional; needed only by WPF/WinForms components'; DetectedVersion=($dotnetDesktop10 -join ',')
         }
+        $appSdkState = 'NotEvaluatedUntilPackageTypeDeclared'
+        if ($PackageType -eq 'MSIX') { $appSdkState = 'ManifestDependencyMustBeDeclared' }
+        elseif ($PackageType -eq 'Unpackaged' -and $RuntimeDeploymentMode -eq 'FrameworkDependent') {
+            if (@($Facts.WindowsAppRuntimePackages).Count -gt 0) { $appSdkState = 'SharedRuntimePackageObserved' }
+            else { $appSdkState = 'SharedRuntimePackageNotObserved' }
+        }
+        elseif ($PackageType -eq 'Unpackaged' -and $RuntimeDeploymentMode -eq 'SelfContained') { $appSdkState = 'SelfContainedAppSdkPolicyRequired' }
         $checks += [pscustomobject]@{
-            Name='Windows App SDK runtime'; State='NotEvaluatedUntilPackageTypeDeclared'
+            Name='Windows App SDK runtime'; State=$appSdkState
             RequiredFor=($PackageType + ' deployment; verify framework package dependency or self-contained runtime policy')
             DetectedVersion=(@($Facts.WindowsAppRuntimePackages | ForEach-Object { $_.Version }) -join ',')
         }
