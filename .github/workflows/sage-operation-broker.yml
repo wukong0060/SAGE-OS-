@@ -1,0 +1,34 @@
+name: SAGE Operation Broker Reference Tests
+
+on:
+  push:
+    branches:
+      - architecture/sage-6x6x6-rfc-2026-11
+    paths:
+      - "src/Sage.Foundation.Contracts/**"
+      - "src/Sage.Foundation.Runtime/**"
+      - "Tests/Sage.Foundation.Runtime.Tests/**"
+      - ".github/workflows/sage-operation-broker.yml"
+  pull_request:
+    paths:
+      - "src/Sage.Foundation.Contracts/**"
+      - "src/Sage.Foundation.Runtime/**"
+      - "Tests/Sage.Foundation.Runtime.Tests/**"
+      - ".github/workflows/sage-operation-broker.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  broker-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - name: Run broker safety tests
+        run: dotnet run --project Tests/Sage.Foundation.Runtime.Tests/Sage.Foundation.Runtime.Tests.csproj --configuration Release

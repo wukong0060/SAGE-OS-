@@ -1,0 +1,43 @@
+name: SAGE Architecture Contracts
+
+on:
+  push:
+    branches:
+      - architecture/sage-6x6x6-rfc-2026-11
+    paths:
+      - "Catalog/Architecture/**"
+      - "Docs/SAGE-FOUNDATION-CONTRACTS-ALPHA.md"
+      - "Tests/Validation/validate-sage-architecture-contracts.py"
+      - "Tests/Validation/requirements-architecture-contracts.txt"
+      - ".github/workflows/sage-architecture-contracts.yml"
+  pull_request:
+    paths:
+      - "Catalog/Architecture/**"
+      - "Docs/SAGE-FOUNDATION-CONTRACTS-ALPHA.md"
+      - "Tests/Validation/validate-sage-architecture-contracts.py"
+      - "Tests/Validation/requirements-architecture-contracts.txt"
+      - ".github/workflows/sage-architecture-contracts.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: Tests/Validation/requirements-architecture-contracts.txt
+
+      - name: Install schema validator
+        run: python -m pip install -r Tests/Validation/requirements-architecture-contracts.txt
+
+      - name: Validate architecture contracts
+        run: python Tests/Validation/validate-sage-architecture-contracts.py

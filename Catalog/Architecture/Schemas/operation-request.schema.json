@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sageos:schema:architecture:operation-request:1.0.0",
+  "title": "SAGE Operation Request",
+  "description": "Typed request envelope accepted by the SAGE operation broker. A request is not authorization to execute.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "operationId",
+    "featureId",
+    "caller",
+    "action",
+    "mode",
+    "target",
+    "riskTier",
+    "requestedAt"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "1.0.0"
+    },
+    "operationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "parentOperationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 128
+    },
+    "featureId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]{2,127}$"
+    },
+    "caller": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coreId",
+        "suiteId"
+      ],
+      "properties": {
+        "coreId": {
+          "enum": [
+            "C1",
+            "C2",
+            "C3",
+            "C4",
+            "C5",
+            "C6"
+          ]
+        },
+        "suiteId": {
+          "enum": [
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5",
+            "S6"
+          ]
+        }
+      }
+    },
+    "action": {
+      "enum": [
+        "inspect",
+        "preview",
+        "apply",
+        "verify",
+        "rollback",
+        "cancel"
+      ]
+    },
+    "mode": {
+      "enum": [
+        "read_only",
+        "mutating"
+      ]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "resource"
+      ],
+      "properties": {
+        "scope": {
+          "enum": [
+            "user",
+            "machine",
+            "process",
+            "game",
+            "application",
+            "device",
+            "network",
+            "sage_state"
+          ]
+        },
+        "resource": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "resourceId": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "riskTier": {
+      "enum": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "requiredCapabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9.-]{2,100}$"
+      }
+    },
+    "parameters": {
+      "type": "object"
+    },
+    "requestedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "timeoutSeconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600
+    },
+    "cancellationSupported": {
+      "type": "boolean"
+    },
+    "previewReference": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "requestContext": {
+      "type": "object",
+      "properties": {
+        "applicationVersion": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "locale": {
+          "type": "string",
+          "maxLength": 24
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "read_only"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "action": {
+            "enum": [
+              "inspect",
+              "preview",
+              "verify"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "const": "apply"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "then": {
+        "properties": {
+          "mode": {
+            "const": "mutating"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "const": "rollback"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "then": {
+        "properties": {
+          "mode": {
+            "const": "mutating"
+          }
+        }
+      }
+    }
+  ]
+}

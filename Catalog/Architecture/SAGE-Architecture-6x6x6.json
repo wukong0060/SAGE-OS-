@@ -1,0 +1,792 @@
+{
+  "schemaVersion": "1.0.0",
+  "documentStatus": "proposed_rfc",
+  "targetProduct": "SAGE OS",
+  "targetVersion": "3.8.x+",
+  "sourceAuditBoundary": {
+    "complete38SourceArchiveAvailable": false,
+    "basis": [
+      "SAGE-OS-v3.8.0-system-doctor-network-guardian-report.md",
+      "SAGE-OS-v3.6.8-Customization-Studio-Implementation-Report.md",
+      "SAGE-OS-v3.6.4-Optimizer-Suite-Implementation-Report.md",
+      "SAGE-OS-v3.6.3-comprehensive-gap-audit.md",
+      "SAGE-OS-v3.6.3-capability-matrix.md"
+    ],
+    "warning": "Report-backed intended mapping only. This file is not proof that every listed feature is present in one integrated 3.8.0 source tree."
+  },
+  "statusDefinitions": {
+    "implemented_source_reported": "Implementation described in a report; native runtime validation is a separate field.",
+    "partial": "A limited implementation is reported, with explicit unimplemented scope.",
+    "catalog_only": "Research or catalogue entries exist; no direct execution is implied.",
+    "proposal_only": "A concept or recommendation exists without a claimed operational implementation.",
+    "planned": "Accepted target capability, not evidenced as implemented.",
+    "excluded": "Intentionally outside the supported product boundary.",
+    "blocked": "Prevented by an unresolved dependency, policy, compatibility or lineage issue.",
+    "lineage_unresolved": "Report evidence exists, but integration into the target source tree is unverified."
+  },
+  "foundations": [
+    {
+      "id": "F1",
+      "name": "Compatibility Foundation",
+      "responsibilities": [
+        "OS edition/build/architecture",
+        "hardware/firmware/driver/API capability detection",
+        "deployment-lane rules",
+        "feature gates and reasons"
+      ]
+    },
+    {
+      "id": "F2",
+      "name": "Execution Foundation",
+      "responsibilities": [
+        "typed operation contracts",
+        "PowerShell 5.1/7 and native adapters",
+        "progress/cancel/timeout",
+        "structured output and controlled elevation"
+      ]
+    },
+    {
+      "id": "F3",
+      "name": "Policy Foundation",
+      "responsibilities": [
+        "deny-by-default",
+        "risk tiers and scope",
+        "approval and consent",
+        "central enforcement before execution"
+      ]
+    },
+    {
+      "id": "F4",
+      "name": "State Foundation",
+      "responsibilities": [
+        "snapshots and journals",
+        "schema migration",
+        "verification and compensation",
+        "interrupted-operation recovery"
+      ]
+    },
+    {
+      "id": "F5",
+      "name": "Evidence Foundation",
+      "responsibilities": [
+        "findings and telemetry",
+        "provenance and confidence",
+        "benchmarks and history",
+        "redacted support export"
+      ]
+    },
+    {
+      "id": "F6",
+      "name": "Trust Foundation",
+      "responsibilities": [
+        "signed manifests/artifacts",
+        "hash and dependency verification",
+        "SBOM/licensing",
+        "trusted updates, repair and uninstall"
+      ]
+    }
+  ],
+  "cores": [
+    {
+      "id": "C1",
+      "name": "SAGE Core",
+      "foundationDependencies": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6"
+      ],
+      "responsibilities": [
+        "Windows/resource management",
+        "process/service/startup inventory",
+        "power and system profiles",
+        "maintenance orchestration"
+      ]
+    },
+    {
+      "id": "C2",
+      "name": "SAGE Gaming",
+      "foundationDependencies": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6"
+      ],
+      "responsibilities": [
+        "game/launcher discovery",
+        "per-game profiles",
+        "session tracking",
+        "frame-time and benchmark workflows"
+      ]
+    },
+    {
+      "id": "C3",
+      "name": "SAGE Intelligence",
+      "foundationDependencies": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6"
+      ],
+      "responsibilities": [
+        "deterministic diagnostics",
+        "analytics and recommendations",
+        "AI provider abstraction",
+        "explanation and evidence synthesis"
+      ]
+    },
+    {
+      "id": "C4",
+      "name": "SAGE Guardian",
+      "foundationDependencies": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6"
+      ],
+      "responsibilities": [
+        "security/privacy posture",
+        "SAGE state integrity",
+        "snapshot and recovery readiness",
+        "rollback coordination"
+      ]
+    },
+    {
+      "id": "C5",
+      "name": "SAGE Device",
+      "foundationDependencies": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6"
+      ],
+      "responsibilities": [
+        "CPU/GPU/RAM/storage inventory",
+        "supported sensors",
+        "drivers/displays/battery/peripherals"
+      ]
+    },
+    {
+      "id": "C6",
+      "name": "SAGE Network",
+      "foundationDependencies": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6"
+      ],
+      "responsibilities": [
+        "adapters/routes",
+        "DNS/TCP/IP",
+        "user-initiated connectivity checks",
+        "latency/jitter/loss"
+      ]
+    }
+  ],
+  "suites": [
+    {
+      "id": "S1",
+      "name": "SAGE Control Center",
+      "primaryCore": "C1",
+      "supportingCores": [
+        "C3",
+        "C4",
+        "C5"
+      ],
+      "modules": [
+        "Home",
+        "System Profiles",
+        "Optimizer",
+        "Maintenance",
+        "Diagnostics entry",
+        "Store",
+        "Update status"
+      ]
+    },
+    {
+      "id": "S2",
+      "name": "SAGE Gaming Center",
+      "primaryCore": "C2",
+      "supportingCores": [
+        "C5",
+        "C6",
+        "C3"
+      ],
+      "modules": [
+        "Game Library",
+        "Game Profiles",
+        "Session Monitor",
+        "Latency Lab",
+        "Benchmark Lab"
+      ]
+    },
+    {
+      "id": "S3",
+      "name": "SAGE Studio",
+      "primaryCore": "C1",
+      "supportingCores": [
+        "C5",
+        "C4"
+      ],
+      "modules": [
+        "Theme authoring",
+        "Theme import/export",
+        "Wallpaper",
+        "Personalization preview and apply"
+      ]
+    },
+    {
+      "id": "S4",
+      "name": "SAGE Desktop Experience",
+      "primaryCore": "C1",
+      "supportingCores": [
+        "C5",
+        "C4",
+        "C3"
+      ],
+      "modules": [
+        "Launcher",
+        "Command Palette",
+        "Workspaces",
+        "Window Management",
+        "Flyouts",
+        "Widgets",
+        "Status Surfaces"
+      ]
+    },
+    {
+      "id": "S5",
+      "name": "SAGE Device & Network Center",
+      "primaryCore": "C5",
+      "supportingCores": [
+        "C6",
+        "C3",
+        "C4"
+      ],
+      "modules": [
+        "Hardware Monitor",
+        "Drivers",
+        "Storage",
+        "Displays",
+        "Battery",
+        "Peripherals",
+        "Network Diagnostics"
+      ]
+    },
+    {
+      "id": "S6",
+      "name": "SAGE Guardian Center",
+      "primaryCore": "C4",
+      "supportingCores": [
+        "C1",
+        "C3"
+      ],
+      "modules": [
+        "Security and Privacy",
+        "Change History",
+        "Snapshots",
+        "Recovery Readiness",
+        "Rollback",
+        "Support Bundle"
+      ]
+    }
+  ],
+  "suiteCoreComposition": {
+    "S1": [
+      "C1",
+      "C3",
+      "C4",
+      "C5"
+    ],
+    "S2": [
+      "C2",
+      "C5",
+      "C6",
+      "C3"
+    ],
+    "S3": [
+      "C1",
+      "C5",
+      "C4"
+    ],
+    "S4": [
+      "C1",
+      "C5",
+      "C4",
+      "C3"
+    ],
+    "S5": [
+      "C5",
+      "C6",
+      "C3",
+      "C4"
+    ],
+    "S6": [
+      "C4",
+      "C1",
+      "C3"
+    ]
+  },
+  "operationLifecycle": [
+    "discover",
+    "checkCompatibility",
+    "evaluatePolicy",
+    "preview",
+    "approve",
+    "prepareState",
+    "execute",
+    "verify",
+    "commit"
+  ],
+  "failureLifecycle": [
+    "compensateOrRollback",
+    "verifyRecovery",
+    "recordEvidence"
+  ],
+  "features": [
+    {
+      "id": "diagnostics.system-doctor",
+      "name": "System Doctor",
+      "status": "implemented_source_reported",
+      "integrationStatus": "lineage_unresolved",
+      "sourceVersion": "3.8.0 report",
+      "cores": [
+        "C3",
+        "C4",
+        "C5"
+      ],
+      "suites": [
+        "S1",
+        "S6"
+      ],
+      "foundations": [
+        "F1",
+        "F5"
+      ],
+      "validation": [
+        "source-reported smoke test wiring",
+        "native Windows runtime pending"
+      ],
+      "scope": "Read-only OS/storage/memory/security/reboot/event/WinRE triage; evidence and manual recommendations; no automatic repair."
+    },
+    {
+      "id": "network.intelligence",
+      "name": "Network Intelligence",
+      "status": "implemented_source_reported",
+      "integrationStatus": "lineage_unresolved",
+      "sourceVersion": "3.8.0 report",
+      "cores": [
+        "C6",
+        "C3",
+        "C5"
+      ],
+      "suites": [
+        "S5",
+        "S1",
+        "S2"
+      ],
+      "foundations": [
+        "F1",
+        "F5"
+      ],
+      "validation": [
+        "source-reported smoke test wiring",
+        "live physical-network probes pending"
+      ],
+      "scope": "User-initiated low-volume ICMP, resolver-call and TCP 443 probes with adapter/route context, packet loss, RTT, median and inter-reply delta."
+    },
+    {
+      "id": "guardian.posture-audit",
+      "name": "Guardian posture and journal audit",
+      "status": "implemented_source_reported",
+      "integrationStatus": "lineage_unresolved",
+      "sourceVersion": "3.8.0 report",
+      "cores": [
+        "C4",
+        "C1"
+      ],
+      "suites": [
+        "S6",
+        "S1"
+      ],
+      "foundations": [
+        "F3",
+        "F4",
+        "F5"
+      ],
+      "validation": [
+        "source-reported schema/read-only tests",
+        "Windows restore and tamper tests pending"
+      ],
+      "scope": "Read-only snapshot-catalog, transaction-journal, WinRE and selected backup-posture audit."
+    },
+    {
+      "id": "guardian.snapshot-restore",
+      "name": "SAGE state snapshot and restore",
+      "status": "partial",
+      "integrationStatus": "lineage_unresolved",
+      "sourceVersion": "3.8.0 report",
+      "cores": [
+        "C4",
+        "C1"
+      ],
+      "suites": [
+        "S6"
+      ],
+      "foundations": [
+        "F2",
+        "F3",
+        "F4",
+        "F5"
+      ],
+      "validation": [
+        "source-reported scoped implementation",
+        "disposable-VM restore testing pending"
+      ],
+      "scope": "Snapshot creation requires user confirmation; restore is restricted to validated current-user SAGE State, Profiles and Config."
+    },
+    {
+      "id": "optimizer.overview",
+      "name": "Optimizer overview and inventory",
+      "status": "implemented_source_reported",
+      "integrationStatus": "lineage_unresolved",
+      "sourceVersion": "3.6.4 report",
+      "cores": [
+        "C1",
+        "C5",
+        "C3"
+      ],
+      "suites": [
+        "S1"
+      ],
+      "foundations": [
+        "F1",
+        "F5"
+      ],
+      "validation": [
+        "source-reported static checks",
+        "native Windows runtime pending"
+      ],
+      "scope": "Evidence-first system overview, startup/process inventory, application health and adapter/drive context."
+    },
+    {
+      "id": "optimizer.temp-quarantine",
+      "name": "Recoverable temporary-file quarantine",
+      "status": "implemented_source_reported",
+      "integrationStatus": "lineage_unresolved",
+      "sourceVersion": "3.6.4 report",
+      "cores": [
+        "C1",
+        "C4"
+      ],
+      "suites": [
+        "S1",
+        "S6"
+      ],
+      "foundations": [
+        "F2",
+        "F3",
+        "F4",
+        "F5"
+      ],
+      "validation": [
+        "source-reported validator/smoke workflow",
+        "Windows runtime pending"
+      ],
+      "scope": "Narrow current-user fixed-drive TEMP preview/quarantine/restore flow with approval, journal and hash/path verification; no permanent deletion."
+    },
+    {
+      "id": "optimizer.catalogues",
+      "name": "Optimization research catalogues",
+      "status": "catalog_only",
+      "integrationStatus": "lineage_unresolved",
+      "sourceVersion": "3.6.4 report",
+      "cores": [
+        "C1",
+        "C3"
+      ],
+      "suites": [
+        "S1"
+      ],
+      "foundations": [
+        "F1",
+        "F3",
+        "F5",
+        "F6"
+      ],
+      "validation": [
+        "catalogue parse reported"
+      ],
+      "scope": "7,758 catalogue entries described across Modern, Research, SAGE-600 and SAGE-7000; no direct execution and no approval implied."
+    },
+    {
+      "id": "gaming.library-launchers",
+      "name": "Game and launcher inventory",
+      "status": "implemented_source_reported",
+      "integrationStatus": "lineage_unresolved",
+      "sourceVersion": "earlier capability reports",
+      "cores": [
+        "C2",
+        "C5",
+        "C3"
+      ],
+      "suites": [
+        "S2"
+      ],
+      "foundations": [
+        "F1",
+        "F5"
+      ],
+      "validation": [
+        "inventory/report checks; native runtime pending"
+      ],
+      "scope": "Game/launcher discovery, process matching and application-health sampling; per-game apply workflow is not thereby complete."
+    },
+    {
+      "id": "gaming.telemetry-benchmarks",
+      "name": "Gaming telemetry, PresentMon analysis and benchmarks",
+      "status": "partial",
+      "integrationStatus": "lineage_unresolved",
+      "sourceVersion": "earlier capability/gap reports",
+      "cores": [
+        "C2",
+        "C5"
+      ],
+      "suites": [
+        "S2"
+      ],
+      "foundations": [
+        "F1",
+        "F5"
+      ],
+      "validation": [
+        "CSV/source capability reported",
+        "persistent history and live capture validation pending"
+      ],
+      "scope": "Project reports describe telemetry/PresentMon analysis and comparison; benchmark history, aggregation and live capture remain gaps."
+    },
+    {
+      "id": "studio.themes",
+      "name": "Customization Studio theme workflow",
+      "status": "partial",
+      "integrationStatus": "lineage_unresolved",
+      "sourceVersion": "3.6.8 report",
+      "cores": [
+        "C1",
+        "C5",
+        "C4"
+      ],
+      "suites": [
+        "S3",
+        "S1"
+      ],
+      "foundations": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6"
+      ],
+      "validation": [
+        "111 static checks reported",
+        "Windows 10/11 apply/restore and WinUI build pending"
+      ],
+      "scope": "Four themes; data-only .sagetheme import/export; current-user light/dark, transparency and wallpaper transactions; accent preview-only; broad shell styling incomplete."
+    },
+    {
+      "id": "desktop.shell-experience",
+      "name": "Desktop Experience runtime surfaces",
+      "status": "planned",
+      "integrationStatus": "lineage_unresolved",
+      "sourceVersion": "gap-audit target",
+      "cores": [
+        "C1",
+        "C5",
+        "C4",
+        "C3"
+      ],
+      "suites": [
+        "S4"
+      ],
+      "foundations": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6"
+      ],
+      "validation": [
+        "not evidenced complete"
+      ],
+      "scope": "Launcher, command palette, workspaces, window management, flyouts/widgets, status surfaces, multi-monitor and shell recovery."
+    },
+    {
+      "id": "intelligence.ai-assistant",
+      "name": "AI Assistant and provider abstraction",
+      "status": "partial",
+      "integrationStatus": "lineage_unresolved",
+      "sourceVersion": "earlier Intelligent Doctor report",
+      "cores": [
+        "C3"
+      ],
+      "suites": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6"
+      ],
+      "foundations": [
+        "F1",
+        "F3",
+        "F5",
+        "F6"
+      ],
+      "validation": [
+        "limited local summarization described",
+        "unified provider and data-consent UX pending"
+      ],
+      "scope": "Deterministic findings remain authoritative; AI may summarize/explain but does not gain implicit execution rights."
+    },
+    {
+      "id": "updates.sage-updater",
+      "name": "Signed SAGE Update Center",
+      "status": "planned",
+      "integrationStatus": "lineage_unresolved",
+      "sourceVersion": "gap-audit target",
+      "cores": [
+        "C1"
+      ],
+      "suites": [
+        "S1"
+      ],
+      "foundations": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6"
+      ],
+      "validation": [
+        "not evidenced complete"
+      ],
+      "scope": "Signed manifests, staged updates, verification, rollback and user-controlled installation."
+    },
+    {
+      "id": "support.bundle",
+      "name": "Redacted support bundle",
+      "status": "planned",
+      "integrationStatus": "lineage_unresolved",
+      "sourceVersion": "gap-audit target",
+      "cores": [
+        "C3",
+        "C4"
+      ],
+      "suites": [
+        "S6",
+        "S1"
+      ],
+      "foundations": [
+        "F3",
+        "F5",
+        "F6"
+      ],
+      "validation": [
+        "not evidenced complete"
+      ],
+      "scope": "Consent-based export of redacted diagnostics, build identity, relevant logs, capability data and operation IDs."
+    },
+    {
+      "id": "platform.operation-broker",
+      "name": "Unified typed operation broker",
+      "status": "planned",
+      "integrationStatus": "blocked",
+      "sourceVersion": "gap-audit P0",
+      "cores": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6"
+      ],
+      "suites": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6"
+      ],
+      "foundations": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6"
+      ],
+      "validation": [
+        "design and contract tests required"
+      ],
+      "scope": "One central request/policy/state/execution/verification/evidence lifecycle; no suite-to-raw-script bypass."
+    },
+    {
+      "id": "platform.capability-registry",
+      "name": "Canonical capability registry",
+      "status": "planned",
+      "integrationStatus": "blocked",
+      "sourceVersion": "gap-audit P0",
+      "cores": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6"
+      ],
+      "suites": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6"
+      ],
+      "foundations": [
+        "F1",
+        "F3",
+        "F5",
+        "F6"
+      ],
+      "validation": [
+        "schema, drift and compatibility contract tests required"
+      ],
+      "scope": "Single source of truth for feature maturity, platform requirements, availability, validation evidence and supported deployment lane."
+    }
+  ],
+  "nonGoals": [
+    "No registry cleaner, RAM cleaner, blanket service disabling or blanket process termination.",
+    "No direct execution of research/catalogue records based only on tier labels.",
+    "No fabricated sensor/FPS/frame-time/network values.",
+    "No unrestricted AI system execution or silent remote data upload.",
+    "No unsupported custom-shell behavior without a native Windows recovery route.",
+    "No general Windows image restore claim from SAGE-owned state restore."
+  ]
+}

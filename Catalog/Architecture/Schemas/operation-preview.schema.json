@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sageos:schema:architecture:operation-preview:1.0.0",
+  "title": "SAGE Operation Preview",
+  "description": "A proposed, expiring, target-bound preview generated before a mutating SAGE operation. The reference is single-use at the broker boundary.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "reference",
+    "operationId",
+    "featureId",
+    "target",
+    "compatibilitySnapshotId",
+    "previewHash",
+    "expiresAt",
+    "plannedChanges"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "reference": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 256
+    },
+    "operationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "featureId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]{2,127}$"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "resource"
+      ],
+      "properties": {
+        "scope": {
+          "enum": [
+            "user",
+            "machine",
+            "process",
+            "game",
+            "application",
+            "device",
+            "network",
+            "sage_state"
+          ]
+        },
+        "resource": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "resourceId": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "compatibilitySnapshotId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "previewHash": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{64}$"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "plannedChanges": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 2000
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 1000
+      }
+    }
+  }
+}
